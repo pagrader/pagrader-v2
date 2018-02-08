@@ -35,13 +35,13 @@ export default class App extends Component {
         <div className="App-Footer text-center">
           Have questions or see issues? Submit them{' '}
           <a
-            href="https://github.com/k2truong/pagrader-v2/issues"
+            href="https://github.com/pagrader/pagrader-v2"
             target="_blank"
             rel="noopener noreferrer"
           >
             on Github
           </a>{' '}
-          or email me at kenneth.e.truong@gmail.com.
+          or email me at pagrader.ucsd@gmail.com.
         </div>
       </div>
     );
