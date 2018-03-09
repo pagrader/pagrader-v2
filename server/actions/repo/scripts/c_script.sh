@@ -2,6 +2,18 @@
 #Script for grading C programs (CSE 5)
 #Usage: ./c_script.sh <Optional Bonus Due Date>
 #Example: ./c_script.sh "01/24/2015 15:00"
+
+function appendLinesOver80CharToHTMLFile() {
+    numLinesOverMax=`cat $2 | grep -c '^.\{81,\}'`
+    maxChars=("There are $numLinesOverMax lines over 80 characters\n")
+    if [ $numLinesOverMax -ne 0 ]; then
+        maxChars+="\n"
+        maxChars+=`grep -n '^.\{81,\}' $2`
+    fi
+    printf "<p class='alert alert-warning'>$maxChars</p>" >> $1
+
+}
+
 red="\033[1;31m"
 green="\033[1;32m"
 blue="\033[1;34m"
@@ -97,6 +109,9 @@ for dir in ${repos[@]}; do
 
         # Compile and ignore warnings
         gcc -Werror temp.c &> $fname.out.html
+
+        appendLinesOver80CharToHTMLFile $fname.out.html temp.c
+
         rm temp.c
 
         #Check if error

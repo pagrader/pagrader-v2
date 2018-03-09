@@ -148,7 +148,7 @@ describe('SSH Protocols', () => {
     ).resolves.toBeDefined();
   });
 
-  test('should get output', done => {
+  test('Output should contain 80 character limit message', done => {
     getFile({}, [
       SOCKET_ID,
       MOCK_ASSIGNMENT.name,
@@ -157,6 +157,9 @@ describe('SSH Protocols', () => {
     ])
       .then(res => {
         const readStream = res(process.stdout);
+        readStream.on('data', data => {
+          expect(data + '').toContain('There are 4 lines over 80 characters');
+        });
         readStream.on('end', () => {
           done();
         });
