@@ -74,7 +74,7 @@ When you are done and want your files back
     
     git stash pop
 
-    [Info on git stash] (https://git-scm.com/docs/git-stash)
+[Info on git stash](https://git-scm.com/docs/git-stash)
     
 If you want to go to a previous commit use interactive rebase
     
@@ -120,7 +120,7 @@ If you want to get rid of what you have and work on a clean directory based on m
 
 A log of where your HEAD and branch references have been for the last few months
     
-    [reflog](https://git-scm.com/book/en/v1/Git-Tools-Revision-Selection#RefLog-Shortnames)
+[Info on reflog](https://git-scm.com/book/en/v1/Git-Tools-Revision-Selection#RefLog-Shortnames)
     
     git reflog
 
