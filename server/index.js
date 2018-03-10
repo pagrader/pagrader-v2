@@ -24,7 +24,11 @@ const io = new SocketIo(server);
 io.path('/ws');
 const port = process.env.PORT || 5000;
 
-mongoose.connect(secrets.db, dbErr => {
+const options = {
+  useMongoClient: true
+};
+
+mongoose.connect(secrets.db, options, dbErr => {
   if (dbErr) {
     console.log('MongoDB ERROR: Could not connect to ' + secrets.db);
     console.log(dbErr);
