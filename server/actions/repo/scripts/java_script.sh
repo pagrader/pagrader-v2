@@ -8,6 +8,17 @@
 # Example: ./java_script.sh "01/24/2015 15:00"
 # Must have PA#.prt and input.txt within same folder
 
+
+function appendLinesOver80CharToHTMLFile() {
+    numLinesOverMax=`cat *.java | grep -c '^.\{81,\}'`
+    maxChars=("There are $numLinesOverMax lines over 80 characters\n")
+    if [ $numLinesOverMax -ne 0 ]; then
+        maxChars+="\n"
+        maxChars+=`grep -n '^.\{81,\}' *.java`
+    fi
+    printf "<p class='alert alert-warning'>$maxChars</p>" >> $1
+}
+
 red="\033[1;31m"
 green="\033[1;32m"
 blue="\033[1;34m"
@@ -98,6 +109,9 @@ for dir in ${repos[@]}; do
 
         #Compile
         javac *.java &> $fname.out.html
+
+        appendLinesOver80CharToHTMLFile $fname.out.html
+
         #Check if error
         if [ $? -ne 1 ]; then
           #Run program manually feeding input and printing out output in background process
