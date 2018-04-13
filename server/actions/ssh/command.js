@@ -3,7 +3,7 @@ import { getSSHConnection } from '../../ssh/connection';
 export default function connect(req) {
   return new Promise((resolve, reject) => {
     const { socketId, command } = req.body;
-
+    console.log('Executing Command:', command);
     const conn = getSSHConnection(socketId);
     if (conn) {
       conn.exec(command, (err, stream) => {
@@ -20,6 +20,10 @@ export default function connect(req) {
           })
           .on('data', data => {
             output += data;
+            console.log('STDOUT:' + data);
+          })
+          .stderr.on('data', function(data) {
+            console.log('STDERR:' + data);
           });
       });
     } else {
