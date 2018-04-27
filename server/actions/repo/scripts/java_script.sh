@@ -16,34 +16,41 @@ clear="\033[0m"
 #Enable bash's nullglob setting so that pattern *.P1 will expand to empty string if no such files
 shopt -s nullglob
 
+#echo "Beginning of java_script.sh"
 
 #Check if bonus date specified
 if [[ -n $1 ]]; then
   # Bonus date change 15:00 if different time
   bonus=$(date +'%s' -d "${1}")
+ # echo "Set bonus date to $1"
 else
   # NO bonus dates so just setting artbitrary date in past
   bonus=$(date +'%s' -d "01/24/1991 15:00:00.000")
+  #echo "Set to default bonus date"
 fi
 
 IsPA7=""
 input_file=""
 if [ -e "PA7.prt" ]; then
+   # echo "Setting IsPA7 to true"
     IsPA7="true"
     input_file="/home/linux/ieng6/cs3s/cs3s17/PAGrader/CSE11/SS1_2016/PA7/pa7_in"
 elif [ ! -e "input.txt" ]; then
   echo -en "Error: Missing file: \"input.txt\""
   exit -1
 else
+    #echo "Setting IsPA7 to false"
     IsPA7="false"
 fi
 
+#echo | pwd
 prt=(*.prt)
 if test ${#prt[@]} -ne 1; then
   echo -en "Error: Missing PA prt file: \"PA#.prt\""
   exit -1
 else
   #Parse PA#.prt for output (We are looking for a line that starts with output)
+  #echo "Parse $prt for output and write out to output.txt"
   awk -v regex=".*output" '$0 ~ regex {seen = 1}
      seen {print}' $prt > output.txt
 fi
@@ -57,24 +64,29 @@ bonuslist=""
 
 if [ "$IsPA7" == "false" ]; then
     echo -en "Not PA7"
+
+   # echo | pwd
     repos=(*/)
+    #Outermost loop, go through each tutor's directories and grade assignments
     for dir in ${repos[@]}; do
+    #  echo "Copying input.txt, output.txt, and $prt into $dir and cd-ing into it"
       cp input.txt output.txt $prt $dir
       cd $dir
 
       assignments=(*.P*)
       # Get filenames
       if test ${#assignments[@]} -le 0; then
+     #   echo "There are 0 assignments"
         continue
-      else
-        echo $dir
       fi
 
+      #echo "counter and readPRT set to 0 and false respectively"
       counter=0
       readPRT=false # Flag to help determine if student is missing in PRT file
 
       # Loop until all assignments are compiled and ran
       while [ $counter -lt ${#assignments[@]} ]; do
+       # echo "counter = $counter"
         #Parse PA.prt file
         while read LINE
         do
@@ -83,6 +95,7 @@ if [ "$IsPA7" == "false" ]; then
           if [[ "$LINE" =~ "${assignments[${counter}]%.*}" ]] || $readPRT
           then
             fname="${assignments[${counter}]%.*}"
+        #    echo "fname = $fname"
 
             # This student was missing from PA.prt so we can't give them bonus
             if ! $readPRT ; then
@@ -101,9 +114,12 @@ if [ "$IsPA7" == "false" ]; then
             tar -xvf ${assignments[${counter}]} > /dev/null
 
             #TODO!! Correct the file
+            # Spits out the first .java file in the current directory
             javaFile=$(ls *.java | head -n 1)
+            # Extracts only the filename without .java?
             javaFile="${javaFile%.java}"
 
+            # Getting student's code to display on PAGrader UI
             sed 's/\r$//' *.java > ${assignments[${counter}]%.*}.txt
 
             #Compile
@@ -115,8 +131,10 @@ if [ "$IsPA7" == "false" ]; then
                 rm input
               fi
 
+              # temp used to feed input for a PARTICULAR assignment?
               cp input.txt temp
 
+              # number of lines in input.txt
               inCount=$(wc -l < input.txt)
               test `tail -c 1 "input.txt"` && ((inCount++))
               count=0
@@ -148,12 +166,14 @@ if [ "$IsPA7" == "false" ]; then
                       IFS= read -rn1 answer <&3 || break
                       answer=${answer:-$'\n'}
                       printf "<font style='color: purple;'>$answer</font>" >> $fname.out.html
+                      # input is updated along the way, compared with the Susan-Provided input.txt
                       printf "$answer" >> input
                       diff -w -B input input.txt > /dev/null
                       if [[ $? -eq 0 ]] ; then
                         # End of input
                         inputFlag=true
                       fi
+                      # To the console to actually continue running student's program; previous printf just include to various files, doesn't actually run program
                       printf %s "$answer"
                     elif $inputFlag ; then
                       killall -15 a.out > /dev/null 2>&1
@@ -173,6 +193,7 @@ if [ "$IsPA7" == "false" ]; then
                   break
                 elif [ -s error ] ; then
                   echo "<h2 class='alert alert-danger'>Runtime Error!</h2>" >> $fname.out.html
+                  #Only one that utilizes error; takes out the error output from runtime to html to display on PAGrader
                   cat error >> $fname.out.html
                   rm error # Run time error
                   break
@@ -204,6 +225,7 @@ if [ "$IsPA7" == "false" ]; then
               echo "<h2 class='alert alert-danger'>Compile Error!</h2>" | cat - $fname.out.html > temp && mv temp $fname.out.html
             fi
             counter=$((counter+1))
+         #   echo "The incremented counter is $counter"
             [ $counter -eq ${#assignments[@]} ] && break
           fi
         done < $prt
@@ -301,6 +323,8 @@ if [ "$IsPA7" == "true" ]; then #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #                  rm strace.fifo
 #                fi
                 echo | pwd
+                echo "about to run perl command"
+                echo "$input_file"
                 perl -e "alarm 2; exec @ARGV" "java ${javaFile} ${input_file}" >> $fname.out.html 2>>error
 
                 errorCode=$?
@@ -324,22 +348,6 @@ if [ "$IsPA7" == "true" ]; then #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 if [ -e error ] ; then
                   rm error
                 fi
-
-#                diff -w -B input input.txt > /dev/null
-#                if [ $? -eq 1 ] ; then
-#                   test 'tail -c 1 "input"' && echo "" >> input
-#                   count=$(wc -l < input)
-#                   test `tail -c 1 "input"` && ((count++))
-#                   tail -n $(expr ${count} - ${inCount}) input.txt > temp
-#                else
-#                   rm strace.fifo
-#                   break
-#                fi
-#              done
-
-#              if [ -e input ] ; then
-#                rm input
-#              fi
 
               rm temp *.java *.class
             else  #Error while compiling
