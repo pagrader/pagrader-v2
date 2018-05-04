@@ -16,41 +16,41 @@ clear="\033[0m"
 #Enable bash's nullglob setting so that pattern *.P1 will expand to empty string if no such files
 shopt -s nullglob
 
-#echo "Beginning of java_script.sh"
+echo "Beginning of java_script.sh"
 
 #Check if bonus date specified
 if [[ -n $1 ]]; then
   # Bonus date change 15:00 if different time
   bonus=$(date +'%s' -d "${1}")
- # echo "Set bonus date to $1"
+  echo "Set bonus date to $1"
 else
   # NO bonus dates so just setting artbitrary date in past
   bonus=$(date +'%s' -d "01/24/1991 15:00:00.000")
-  #echo "Set to default bonus date"
+  echo "Set to default bonus date"
 fi
 
 IsPA7=""
 input_file=""
 if [ -e "PA7.prt" ]; then
-   # echo "Setting IsPA7 to true"
+    echo "Setting IsPA7 to true"
     IsPA7="true"
-    input_file="/home/linux/ieng6/cs3s/cs3s17/PAGrader/CSE11/SS1_2016/PA7/pa7_in"
+    input_file="../pa7_in"
 elif [ ! -e "input.txt" ]; then
   echo -en "Error: Missing file: \"input.txt\""
   exit -1
 else
-    #echo "Setting IsPA7 to false"
+    echo "Setting IsPA7 to false"
     IsPA7="false"
 fi
 
-#echo | pwd
+echo | pwd
 prt=(*.prt)
 if test ${#prt[@]} -ne 1; then
   echo -en "Error: Missing PA prt file: \"PA#.prt\""
   exit -1
 else
   #Parse PA#.prt for output (We are looking for a line that starts with output)
-  #echo "Parse $prt for output and write out to output.txt"
+  echo "Parse $prt for output and write out to output.txt"
   awk -v regex=".*output" '$0 ~ regex {seen = 1}
      seen {print}' $prt > output.txt
 fi
@@ -65,28 +65,28 @@ bonuslist=""
 if [ "$IsPA7" == "false" ]; then
     echo -en "Not PA7"
 
-   # echo | pwd
+    echo | pwd
     repos=(*/)
     #Outermost loop, go through each tutor's directories and grade assignments
     for dir in ${repos[@]}; do
-    #  echo "Copying input.txt, output.txt, and $prt into $dir and cd-ing into it"
+      echo "Copying input.txt, output.txt, and $prt into $dir and cd-ing into it"
       cp input.txt output.txt $prt $dir
       cd $dir
 
       assignments=(*.P*)
       # Get filenames
       if test ${#assignments[@]} -le 0; then
-     #   echo "There are 0 assignments"
+        echo "There are 0 assignments"
         continue
       fi
 
-      #echo "counter and readPRT set to 0 and false respectively"
+      echo "counter and readPRT set to 0 and false respectively"
       counter=0
       readPRT=false # Flag to help determine if student is missing in PRT file
 
       # Loop until all assignments are compiled and ran
       while [ $counter -lt ${#assignments[@]} ]; do
-       # echo "counter = $counter"
+        echo "counter = $counter"
         #Parse PA.prt file
         while read LINE
         do
@@ -95,7 +95,7 @@ if [ "$IsPA7" == "false" ]; then
           if [[ "$LINE" =~ "${assignments[${counter}]%.*}" ]] || $readPRT
           then
             fname="${assignments[${counter}]%.*}"
-        #    echo "fname = $fname"
+            echo "fname = $fname"
 
             # This student was missing from PA.prt so we can't give them bonus
             if ! $readPRT ; then
@@ -178,7 +178,7 @@ if [ "$IsPA7" == "false" ]; then
                     elif $inputFlag ; then
                       killall -15 a.out > /dev/null 2>&1
                     fi
-                  done < strace.fifo 3< temp | strace -o strace.fifo -f -e read stdbuf -o0 perl -e "alarm 2; exec @ARGV" "java ${javaFile}"
+                  done < strace.fifo 3< temp | strace -o strace.fifo -f -e read stdbuf -o0 perl -e "alarm 8; exec @ARGV" "java ${javaFile}"
                 } >> $fname.out.html 2>>error
 
                 errorCode=$?
@@ -225,7 +225,7 @@ if [ "$IsPA7" == "false" ]; then
               echo "<h2 class='alert alert-danger'>Compile Error!</h2>" | cat - $fname.out.html > temp && mv temp $fname.out.html
             fi
             counter=$((counter+1))
-         #   echo "The incremented counter is $counter"
+            echo "The incremented counter is $counter"
             [ $counter -eq ${#assignments[@]} ] && break
           fi
         done < $prt
@@ -243,7 +243,7 @@ fi
 
 #TODO
 if [ "$IsPA7" == "true" ]; then #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    echo  "In PA7"
+    echo "In PA7"
     repos=(*/)
     for dir in ${repos[@]}; do
       cp input.txt output.txt $prt $dir
@@ -262,6 +262,7 @@ if [ "$IsPA7" == "true" ]; then #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       # Loop until all assignments are compiled and ran
       while [ $counter -lt ${#assignments[@]} ]; do
+        echo "counter = $counter"
         #Parse PA.prt file
         while read LINE
         do
@@ -270,6 +271,7 @@ if [ "$IsPA7" == "true" ]; then #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
           if [[ "$LINE" =~ "${assignments[${counter}]%.*}" ]] || $readPRT
           then
             fname="${assignments[${counter}]%.*}"
+            echo "fname = $fname"
 
             # This student was missing from PA.prt so we can't give them bonus
             if ! $readPRT ; then
@@ -297,72 +299,51 @@ if [ "$IsPA7" == "true" ]; then #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             javac *.java &> $fname.out.html
             #Check if error
             if [ $? -ne 1 ]; then
-#              #Run program manually feeding input and printing out output in background process
-#              if [ -e input ]; then
-#                rm input
-#              fi
-#
-#              cp input.txt temp
-#
-#              inCount=$(wc -l < input.txt)
-#              test `tail -c 1 "input.txt"` && ((inCount++))
-#              count=0
-#              # Run until all input given
-#              while [ $count -lt $inCount ]
-#              do
-#                if [ -e input ]; then
-#                  if [[ $errorCode -eq 121 ]]; then
-#                    # For some reason the script is terminating programs when it should keep going
-#                    echo "<p class='alert alert-danger'>Program terminated by grading script remote I/O error.\nPlease run their program manually or check their code.</p>" >> $fname.out.html
-#                  else
-#                    echo "<p class='alert alert-danger'>Program ended on last input... Restarting program...</p>" >> $fname.out.html
-#                  fi
-#                fi
-#
-#                if [ -e "strace.fifo" ]; then
-#                  rm strace.fifo
-#                fi
-                echo | pwd
-                echo "about to run perl command"
-                echo "$input_file"
-                perl -e "alarm 2; exec @ARGV" "java ${javaFile} ${input_file}" >> $fname.out.html 2>>error
+              echo | pwd
+              #echo "about to run perl command"
+              echo "$input_file"
+              perl -e "alarm 10; exec @ARGV" "java ${javaFile} ${input_file}" &>> $fname.out.html
+              #java ${javeFile} ${input_file} >> $fname.out.html 2>> error\
+              echo "Finished running perl command?"
+              cat error
 
-                errorCode=$?
-                #Check if the program was terminated
-                if [[ $errorCode -eq 142 ]] ; then
-                  printf "<p class='alert alert-danger'>Program terminated because of infinite loop.\nPlease run their program manually or check their code.</p>" > $fname.out.html
-                  rm error # Error is from infinite loop
-                  break
-                elif [[ $errorCode -eq 143 ]] ; then
-                  printf "<p class='alert alert-danger'>Program terminated because it was waiting for more input than expected.\n(Note: This could mean they have getchar() at the end of their code.\nPlease run their program manually or check their code.)</p>" >> $fname.out.html
-                  rm error # Error is from running out of input
-                  break
-                elif [ -s error ] ; then
-                  echo "<h2 class='alert alert-danger'>Runtime Error!</h2>" >> $fname.out.html
-                  cat error >> $fname.out.html
-                  rm error # Run time error
-                  break
-                fi
+              errorCode=$?
+              echo "The error code is ${errorCode}"
+              #Check if the program was terminated
+              if [[ $errorCode -eq 142 ]] ; then
+                printf "<p class='alert alert-danger'>Program terminated because of infinite loop.\nPlease run their program manually or check their code.</p>" > $fname.out.html
+                rm error # Error is from infinite loop
+                break
+              elif [[ $errorCode -eq 143 ]] ; then
+                printf "<p class='alert alert-danger'>Program terminated because it was waiting for more input than expected.\n(Note: This could mean they have getchar() at the end of their code.\nPlease run their program manually or check their code.)</p>" >> $fname.out.html
+                rm error # Error is from running out of input
+                break
+              elif [ -s error ] ; then
+                echo "in the last error"
+                echo "<h2 class='alert alert-danger'>Runtime Error!</h2>" >> $fname.out.html
+                cat error >> $fname.out.html
+                rm error # Run time error
+                break
+              fi
 
-                # Remove empty error files
-                if [ -e error ] ; then
-                  rm error
-                fi
+              echo "Remove error files check"
+              # Remove empty error files
+              if [ -e error ] ; then
+                rm error
+              fi
 
+              echo "About to remove .java and .class files"
               rm temp *.java *.class
             else  #Error while compiling
               echo "<h2 class='alert alert-danger'>Compile Error!</h2>" | cat - $fname.out.html > temp && mv temp $fname.out.html
             fi
             counter=$((counter+1))
+            echo "The incremented counter is $counter"
             [ $counter -eq ${#assignments[@]} ] && break
           fi
         done < $prt
         readPRT=true
       done
-
-#      if [ -e "strace.fifo" ]; then
-#        rm strace.fifo
-#      fi
 
       rm input.txt $prt
       cd ..
