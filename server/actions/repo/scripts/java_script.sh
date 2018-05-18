@@ -302,7 +302,7 @@ if [ "$IsPA7" == "true" ]; then #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
               # Kills process if it is over 8 seconds, input_file is path to the pa7_in
               # &>> $fname.out.html because the students handle error checking & write to STDERR
               # So we just send all the output to their fname.out.html
-              perl -e "alarm 8; exec @ARGV" "java ${javaFile} ${input_file}" &>> $fname.out.html
+              perl -e "alarm 10; exec @ARGV" "java ${javaFile} ${input_file}" &>> $fname.out.html
 
               errorCode=$?
               #Check if the program was terminated
