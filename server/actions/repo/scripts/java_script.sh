@@ -243,9 +243,10 @@ fi
 
 #TODO
 if [ "$IsPA7" == "true" ]; then #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    echo "In PA7"
     repos=(*/)
+    # Outermost loop, go through each tutor's directories, eg. cs11u1_PA7
     for dir in ${repos[@]}; do
+      # Currently in /PA7, copying various finals into a specific tutor's directory, eg cs11u1_PA7
       cp input.txt output.txt $prt $dir
       cd $dir
 
@@ -262,7 +263,6 @@ if [ "$IsPA7" == "true" ]; then #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
       # Loop until all assignments are compiled and ran
       while [ $counter -lt ${#assignments[@]} ]; do
-        echo "counter = $counter"
         #Parse PA.prt file
         while read LINE
         do
@@ -271,7 +271,6 @@ if [ "$IsPA7" == "true" ]; then #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
           if [[ "$LINE" =~ "${assignments[${counter}]%.*}" ]] || $readPRT
           then
             fname="${assignments[${counter}]%.*}"
-            echo "fname = $fname"
 
             # This student was missing from PA.prt so we can't give them bonus
             if ! $readPRT ; then
@@ -293,52 +292,35 @@ if [ "$IsPA7" == "true" ]; then #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             javaFile=$(ls *.java | head -n 1)
             javaFile="${javaFile%.java}"
 
+            # Removes special characters from Windows to be able to display on PAGrader UI
             sed 's/\r$//' *.java > ${assignments[${counter}]%.*}.txt
 
             #Compile
             javac *.java &> $fname.out.html
-            #Check if error
+            #Check if compile error
             if [ $? -ne 1 ]; then
-              echo | pwd
-              #echo "about to run perl command"
-              echo "$input_file"
-              perl -e "alarm 10; exec @ARGV" "java ${javaFile} ${input_file}" &>> $fname.out.html
-              #java ${javeFile} ${input_file} >> $fname.out.html 2>> error\
-              echo "Finished running perl command?"
-              cat error
+              # Kills process if it is over 8 seconds, input_file is path to the pa7_in
+              # &>> $fname.out.html because the students handle error checking & write to STDERR
+              # So we just send all the output to their fname.out.html
+              perl -e "alarm 8; exec @ARGV" "java ${javaFile} ${input_file}" &>> $fname.out.html
 
               errorCode=$?
-              echo "The error code is ${errorCode}"
               #Check if the program was terminated
               if [[ $errorCode -eq 142 ]] ; then
+                # Error is from infinite loop
                 printf "<p class='alert alert-danger'>Program terminated because of infinite loop.\nPlease run their program manually or check their code.</p>" > $fname.out.html
-                rm error # Error is from infinite loop
-                break
               elif [[ $errorCode -eq 143 ]] ; then
+                # Error is from running out of input
                 printf "<p class='alert alert-danger'>Program terminated because it was waiting for more input than expected.\n(Note: This could mean they have getchar() at the end of their code.\nPlease run their program manually or check their code.)</p>" >> $fname.out.html
-                rm error # Error is from running out of input
-                break
-              elif [ -s error ] ; then
-                echo "in the last error"
-                echo "<h2 class='alert alert-danger'>Runtime Error!</h2>" >> $fname.out.html
-                cat error >> $fname.out.html
-                rm error # Run time error
-                break
+              # Removed error file for Runtime because students write to STDERR in PA, no way to determine actual error & their intended error
               fi
 
-              echo "Remove error files check"
-              # Remove empty error files
-              if [ -e error ] ; then
-                rm error
-              fi
-
-              echo "About to remove .java and .class files"
               rm temp *.java *.class
             else  #Error while compiling
               echo "<h2 class='alert alert-danger'>Compile Error!</h2>" | cat - $fname.out.html > temp && mv temp $fname.out.html
             fi
+            # Increment counter to move on to the next assignment in the tutor's directory
             counter=$((counter+1))
-            echo "The incremented counter is $counter"
             [ $counter -eq ${#assignments[@]} ] && break
           fi
         done < $prt
